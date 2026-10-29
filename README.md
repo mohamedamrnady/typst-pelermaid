@@ -302,6 +302,24 @@ Every tagged release attaches three PDFs built from the test documents:
 GitHub's `/releases/latest/download/` path always redirects to the newest release, so these
 links stay current.
 
+## Releasing
+
+Releases are built by `.github/workflows/release.yml`. Configure this once:
+
+1. Create a `release` environment (Settings → Environments) with a required reviewer.
+2. Add `TYPST_PACKAGES_TOKEN` as a secret on that environment, not at repository level.
+   The script opens the PR against `typst/packages`, so this must be a classic PAT with
+   `public_repo`; fine-grained tokens cannot open PRs in repositories the account does not
+   own. Create it on the same account as `PACKAGES_FORK_OWNER`, and make sure that account
+   already has a `packages` fork.
+3. Restrict environment deployments to `v*`, plus `main` if you want to rehearse with
+   `workflow_dispatch`.
+4. Add the repository variable `PUBLISH_PACKAGES_PR=true` when tag pushes should open the
+   package PR. Without it, tag pushes only create the GitHub release.
+
+Rehearse with a `workflow_dispatch` of the version with `publish_packages` off, then run it
+again with the input on (or against a scratch fork) before publishing a real version.
+
 ## Tests
 
 - `tests/corpus/` contains one `.mmd` file per diagram family Pele supports, plus a few

@@ -2,9 +2,13 @@
 # Opens or updates a typst/packages PR from a staged package.
 #
 # Required environment:
-#   TYPST_PACKAGES_TOKEN  classic PAT with public_repo scope (or equivalent)
+#   TYPST_PACKAGES_TOKEN  classic PAT with `public_repo` scope. The script opens the PR
+#                         itself, which fine-grained tokens cannot do for a repository the
+#                         account does not own. Store it as a secret on the `release`
+#                         environment in the source repository.
 # Optional environment:
-#   PACKAGES_FORK_OWNER   defaults to the authenticated GitHub user
+#   PACKAGES_FORK_OWNER   defaults to the authenticated GitHub user. The account must
+#                         already have a fork named `packages`.
 #   PACKAGES_UPSTREAM     defaults to typst/packages
 #   DRY_RUN=1             validate and print the intended action, no network writes
 set -euo pipefail

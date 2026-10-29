@@ -15,8 +15,9 @@ on:
         default: false
         type: boolean
 
+# The token used by `build` cannot write repository contents. Only the release job can.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -31,20 +32,25 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       package_dir: ${{ steps.stage.outputs.package_dir }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - name: Ensure scripts are executable
-        run: chmod +x scripts/*.sh tests/*.sh
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.3"
 
-      - uses: typst-community/setup-typst@v5
+      - uses: typst-community/setup-typst@fee4b65b091cc546f02ce3be15fad8760f38a108 # v5.3.0
         with:
           typst-version: "0.15.1"
 
-      - uses: dtolnay/rust-toolchain@stable
+      # The bytecode check asserts a byte-identical pele.kbc1, so pin the compiler that
+      # produces it instead of following `stable`.
+      - name: Install Rust 1.99.1
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+          rustc --version
 
       - name: Resolve version
         id: version
@@ -97,7 +103,10 @@ jobs:
 
       - name: Record staged path
         id: stage
-        run: echo "package_dir=dist/packages/preview/${{ steps.version.outputs.name }}/${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: echo "package_dir=dist/packages/preview/$NAME/$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Package checker
         env:
@@ -105,14 +114,14 @@ jobs:
         run: ./scripts/package-check.sh
 
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pelermaid-package
           path: dist/packages
           if-no-files-found: error
 
       - name: Upload diagram gallery
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pelermaid-diagrams
           path: artifacts/*.pdf
@@ -126,51 +135,74 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pelermaid-package
           path: dist/packages
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pelermaid-diagrams
           path: artifacts
 
       - name: Archive package
+        env:
+          PACKAGE_DIR: ${{ needs.build.outputs.package_dir }}
+          NAME: ${{ needs.build.outputs.name }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
           mkdir -p dist/release
-          tar -C "${{ needs.build.outputs.package_dir }}" -czf \
-            "dist/release/${{ needs.build.outputs.name }}-${{ needs.build.outputs.version }}.tar.gz" .
+          tar -C "$PACKAGE_DIR" -czf "dist/release/$NAME-$VERSION.tar.gz" .
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          NAME: ${{ needs.build.outputs.name }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            "dist/release/${{ needs.build.outputs.name }}-${{ needs.build.outputs.version }}.tar.gz" \
-            artifacts/corpus.pdf \
-            artifacts/prerendered.pdf \
-            artifacts/compare.pdf \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes
+          awk -v version="$VERSION" '/^## / { section = ($2 == version); next } section' \
+            CHANGELOG.md > notes.md
+          test -s notes.md || {
+            echo "error: CHANGELOG.md has no '## $VERSION' section" >&2
+            exit 1
+          }
+
+          archive="dist/release/$NAME-$VERSION.tar.gz"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Reruns replace assets and notes instead of failing on an existing release.
+            gh release upload "$TAG" "$archive" artifacts/*.pdf --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" "$archive" artifacts/*.pdf \
+              --title "$TAG" --notes-file notes.md
+          fi
 
   publish-packages:
     name: Open typst/packages PR
-    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.publish_packages) || (github.event_name == 'push' && vars.PUBLISH_PACKAGES_PR == 'true') }}
-    needs: build
+    # Only after the GitHub release succeeds. Dispatch runs skip github-release, so a
+    # skipped release job is allowed there; tag pushes require `success`.
+    needs: [build, github-release]
+    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.github-release.result == 'success' || needs.github-release.result == 'skipped') && ((github.event_name == 'workflow_dispatch' && inputs.publish_packages) || (github.event_name == 'push' && vars.PUBLISH_PACKAGES_PR == 'true')) }}
     runs-on: ubuntu-latest
+    # Configure this environment in the repository settings:
+    #   - required reviewer
+    #   - TYPST_PACKAGES_TOKEN as an environment secret (classic PAT with `public_repo`;
+    #     the script opens the PR against typst/packages)
+    #   - deployment tags restricted to v* (and main if you dispatch from main)
     environment: release
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - name: Ensure scripts are executable
-        run: chmod +x scripts/*.sh
-
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pelermaid-package
           path: dist/packages
@@ -180,4 +212,5 @@ jobs:
           TYPST_PACKAGES_TOKEN: ${{ secrets.TYPST_PACKAGES_TOKEN }}
           PACKAGES_FORK_OWNER: ${{ github.repository_owner }}
           PACKAGES_UPSTREAM: typst/packages
-        run: ./scripts/open-packages-pr.sh "dist/packages/preview/${{ needs.build.outputs.name }}/${{ needs.build.outputs.version }}"
+          PACKAGE_PATH: dist/packages/preview/${{ needs.build.outputs.name }}/${{ needs.build.outputs.version }}
+        run: ./scripts/open-packages-pr.sh "$PACKAGE_PATH"

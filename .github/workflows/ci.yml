@@ -22,20 +22,25 @@ jobs:
       matrix:
         typst: ["0.15.0", "0.15.1"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - name: Ensure scripts are executable
-        run: chmod +x scripts/*.sh tests/*.sh
-
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.4.3"
 
-      - uses: typst-community/setup-typst@v5
+      - uses: typst-community/setup-typst@fee4b65b091cc546f02ce3be15fad8760f38a108 # v5.3.0
         with:
           typst-version: ${{ matrix.typst }}
 
-      - uses: dtolnay/rust-toolchain@stable
+      # The bytecode check asserts a byte-identical pele.kbc1, so pin the compiler that
+      # produces it instead of following `stable`.
+      - name: Install Rust 1.99.1
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup default 1.99.1
+          rustc --version
 
       - name: Build bundle and bytecode
         run: ./scripts/build.sh
