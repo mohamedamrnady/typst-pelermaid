@@ -11,6 +11,8 @@ gives you Mermaid syntax inside Typst; it does not use Mermaid.js and does not p
 pixel-identical output to Mermaid.js. Text measures, spacing, wrapping, and edge routing are
 Pele's. Pele 1.12.0 targets Mermaid 12.1.0 syntax.
 
+Note: The bundling of a JavaScript library and JavaScript Engine inside the package defeats the fast claim for the extension compared to native extensions like `merman`. This extension utilizes Pele's layout engine and Obsidian's maintainability and acts as a drop-in replacement for documents already using `merman`.
+
 The JavaScript runtime is [CtxJS](https://github.com/lublak/typst-ctxjs-package); the Pele
 bundle is shipped as QuickJS bytecode (`pele.kbc1`).
 
