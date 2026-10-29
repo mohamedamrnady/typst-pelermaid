@@ -9,8 +9,8 @@ on:
         description: "Version already set in typst.toml (for example 0.1.0)"
         required: true
         type: string
-      publish_packages:
-        description: "Open or update the typst/packages PR"
+      push_packages:
+        description: "Push the staged package to your typst/packages fork"
         required: false
         default: false
         type: boolean
@@ -182,17 +182,17 @@ jobs:
               --title "$TAG" --notes-file notes.md
           fi
 
-  publish-packages:
-    name: Open typst/packages PR
+  push-packages:
+    name: Push branch to typst/packages fork
     # Only after the GitHub release succeeds. Dispatch runs skip github-release, so a
     # skipped release job is allowed there; tag pushes require `success`.
     needs: [build, github-release]
-    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.github-release.result == 'success' || needs.github-release.result == 'skipped') && ((github.event_name == 'workflow_dispatch' && inputs.publish_packages) || (github.event_name == 'push' && vars.PUBLISH_PACKAGES_PR == 'true')) }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && (needs.github-release.result == 'success' || needs.github-release.result == 'skipped') && ((github.event_name == 'workflow_dispatch' && inputs.push_packages) || (github.event_name == 'push' && vars.PUSH_PACKAGES_FORK == 'true')) }}
     runs-on: ubuntu-latest
     # Configure this environment in the repository settings:
     #   - required reviewer
-    #   - TYPST_PACKAGES_TOKEN as an environment secret (classic PAT with `public_repo`;
-    #     the script opens the PR against typst/packages)
+    #   - TYPST_PACKAGES_TOKEN as an environment secret (fine-grained PAT with Contents:
+    #     read/write on your typst/packages fork)
     #   - deployment tags restricted to v* (and main if you dispatch from main)
     environment: release
     permissions:
@@ -207,10 +207,10 @@ jobs:
           name: pelermaid-package
           path: dist/packages
 
-      - name: Open or update package PR
+      - name: Push branch to packages fork
         env:
           TYPST_PACKAGES_TOKEN: ${{ secrets.TYPST_PACKAGES_TOKEN }}
           PACKAGES_FORK_OWNER: ${{ github.repository_owner }}
           PACKAGES_UPSTREAM: typst/packages
           PACKAGE_PATH: dist/packages/preview/${{ needs.build.outputs.name }}/${{ needs.build.outputs.version }}
-        run: ./scripts/open-packages-pr.sh "$PACKAGE_PATH"
+        run: ./scripts/push-packages-fork.sh "$PACKAGE_PATH"
