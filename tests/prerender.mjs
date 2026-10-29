@@ -39,7 +39,7 @@ const theme = {
   "series-6": "#bf3989",
   "series-7": "#0550ae",
   "series-8": "#116329",
-  font: "'Libertinus Serif'",
+  font: "'Libertinus Serif', sans-serif",
   "font-mono": "'DejaVu Sans Mono', 'Liberation Mono', Consolas, monospace",
   stroke: "1.75px",
   radius: "6px",

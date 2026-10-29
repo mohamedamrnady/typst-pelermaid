@@ -10,11 +10,21 @@ Initial release.
 - Document-aware typography by default: `text.font`, `text.size`, `text.fill`, and
   `page.fill` feed the diagram unless overridden. Explicit `font`, `font-size`,
   `foreground`, `background`, and `theme` values win.
+- `base-theme: "auto"` (the default) follows the page: it selects the `dark` preset for
+  dark pages and `modern` otherwise, and derives `surface`, `surface-alt`, `muted`, `line`,
+  and `border` from the actual foreground and background. Light text on a dark page no
+  longer yields light node fills, and explicit `base-theme` values keep their own palette.
+  A low-contrast document foreground is ignored.
 - `measure: "auto"` is the default and uses Pele's per-character width table.
-  `measure: "mono"` opts into a flat 0.6 em advance for true monospace fonts.
-- Presets `modern` (default), `dark`, and `print`. Theme keys accept canonical
+  `measure: "mono"` opts into a flat 0.6 em advance for true monospace fonts. The Pele
+  `monospace` option remains separate: it chooses which parts are drawn with the mono
+  family.
+- Presets `modern`, `dark`, and `print`. Theme keys accept canonical
   Pele variables, `--pele-*` spellings, and common aliases; unknown theme keys,
   renderer options passed in `theme`, and unknown `options` keys raise an error.
+- `series` palettes repeat to fill all eight chart slots; more than eight colours is an
+  error. `text.font` dictionaries (`name` plus `covers`) are accepted, and font stacks gain
+  a generic fallback when they lack one.
 - `layout` is a validated alias for the layout-related render options.
 - `background: none` produces a transparent canvas while keeping canvas-coloured
   decorations opaque through the `label-bg` variable: edge labels and casings, arrow

@@ -24,6 +24,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Ensure scripts are executable
+        run: chmod +x scripts/*.sh tests/*.sh
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4.3"
@@ -42,6 +45,9 @@ jobs:
 
       - name: Smoke test
         run: bun tests/smoke.mjs
+
+      - name: Theme and contrast checks
+        run: ./tests/theme.sh
 
       - name: Check release metadata
         run: ./scripts/check-release.sh

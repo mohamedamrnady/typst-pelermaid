@@ -18,6 +18,7 @@
 // Runtime rendering: the same configuration as `tests/prerender.mjs`.
 #let runtime-svgs = entries.map(entry => mermaid-svg(
   read(entry.source),
+  base-theme: "modern",
   font: ("Libertinus Serif",),
   background: rgb("#ffffff"),
   foreground: rgb("#1f2328"),

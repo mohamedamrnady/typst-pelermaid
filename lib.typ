@@ -333,21 +333,47 @@
   }
 }
 
-#let css-font(value) = {
-  if type(value) == array {
-    value
-      .map(font => {
-        let font = str(font)
-        if font.contains(" ") and not font.starts-with("\"") and not font.starts-with("'") {
-          "'" + font + "'"
-        } else {
-          font
-        }
-      })
-      .join(", ")
+#let css-font(value, fallback: "sans-serif") = {
+  let entries = if type(value) == array { value } else { (value,) }
+  let families = entries.map(entry => {
+    // `text.font` entries can be dictionaries with `name` and `covers`; only the family
+    // name belongs in CSS.
+    let name = if type(entry) == dictionary and "name" in entry { entry.name } else { entry }
+    let name = str(name).trim()
+    if name == "" {
+      fallback
+    } else if name.contains(" ") and not name.starts-with("\"") and not name.starts-with("'") {
+      "'" + name + "'"
+    } else {
+      name
+    }
+  })
+  let joined = families.join(", ")
+  let joined-lower = lower(joined)
+  let generics = ("serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-monospace")
+  let has-generic = generics.any(generic => joined-lower == generic or joined-lower.ends-with(", " + generic))
+  if joined == "" {
+    fallback
+  } else if has-generic {
+    joined
   } else {
-    str(value)
+    joined + ", " + fallback
   }
+}
+
+// Perceived brightness in sRGB, used to pick a preset and check document contrast.
+#let luminance(color) = {
+  let channels = rgb(color).components().map(float)
+  0.2126 * channels.at(0) + 0.7152 * channels.at(1) + 0.0722 * channels.at(2)
+}
+
+#let mix-toward(base, target, ratio) = {
+  color.mix((base, 100% - ratio), (target, ratio), space: rgb)
+}
+
+#let is-transparent(value) = {
+  let text = lower(str(value)).trim()
+  text == "" or text == "none" or text == "transparent"
 }
 
 #let px(value) = {
@@ -392,7 +418,7 @@
 )
 
 #let build-config(
-  base-theme: "modern",
+  base-theme: "auto",
   theme: none,
   document: none,
   background: auto,
@@ -408,20 +434,38 @@
   options: (:),
   measure: "auto",
 ) = {
-  if base-theme not in presets {
+  let auto-theme = base-theme == "auto"
+  if not auto-theme and base-theme not in presets {
     panic(
-      "pelermaid: unknown base-theme " + repr(base-theme) + "; expected one of "
+      "pelermaid: unknown base-theme " + repr(base-theme) + "; expected \"auto\", "
         + presets.keys().map(repr).join(", "),
     )
   }
 
-  let vars = (: ..presets.at(base-theme))
+  // Choose the preset before applying document values. `auto` follows the page luminance;
+  // an explicit base theme keeps its palette, even on a page of the opposite polarity.
+  let preset = if auto-theme {
+    if document != none and document.background != none and luminance(document.background) < 0.5 {
+      "dark"
+    } else {
+      "modern"
+    }
+  } else {
+    base-theme
+  }
+  let vars = (: ..presets.at(preset))
   let render-options = (:)
   let font-set = false
   let label-bg-set = false
+  let bg-set = false
+  let neutral-set = (:)
+  let bg-color = none
+  let fg-color = none
 
-  // 1. Document typography. These are defaults only: `theme`, the named arguments, and
-  // `options` override them.
+  // 1. Document typography. With the default `auto` base theme, colours also follow the
+  // page; explicit base themes opt out so their fg/bg pairing stays intact. `main.js`
+  // copies `font`/`font-mono` into Pele's measurement options, so the drawn and measured
+  // stacks stay in sync.
   if document != none {
     if font == auto {
       vars.insert("font", css-font(document.font))
@@ -429,17 +473,30 @@
     if font-size == auto {
       render-options.insert("fontSize", px(document.size))
     }
-    if foreground == auto and document.fill != none {
-      vars.insert("fg", css-value(document.fill))
-    }
-    if background == auto {
-      if document.background == none {
-        vars.insert("bg", "transparent")
-        // Keep the preset label colour so edge labels remain legible on a transparent
-        // canvas.
-      } else {
-        vars.insert("bg", css-value(document.background))
-        vars.insert("label-bg", css-value(document.background))
+    if auto-theme {
+      let page-color = document.background
+      let text-color = document.fill
+      let canvas = if page-color == none { white } else { page-color }
+      // Only adopt the document foreground when it actually contrasts with the page. A
+      // stray `text.fill` should not make the diagram invisible.
+      if (
+        foreground == auto
+          and text-color != none
+          and calc.abs(luminance(text-color) - luminance(canvas)) >= 0.4
+      ) {
+        vars.insert("fg", css-value(text-color))
+        fg-color = text-color
+      }
+      if background == auto {
+        if page-color == none {
+          vars.insert("bg", "transparent")
+          // Keep the preset label colour so edge labels remain legible on a transparent
+          // canvas.
+        } else {
+          vars.insert("bg", css-value(page-color))
+          vars.insert("label-bg", css-value(page-color))
+          bg-color = page-color
+        }
       }
     }
   }
@@ -454,11 +511,27 @@
       if name == "label-bg" {
         label-bg-set = true
       }
+      if name in ("surface", "surface-alt", "muted", "line", "border") {
+        neutral-set.insert(name, true)
+      }
+      if name == "bg" {
+        bg-set = true
+        bg-color = if type(value) == color { value } else { none }
+      } else if name == "fg" {
+        fg-color = if type(value) == color { value } else { none }
+      }
       if name in ("font", "font-mono") {
-        vars.insert(name, css-font(value))
+        vars.insert(
+          name,
+          css-font(value, fallback: if name == "font-mono" { "monospace" } else { "sans-serif" }),
+        )
       } else {
         vars.insert(name, css-value(value))
       }
+    }
+    // A theme background also sets the label background unless that was set separately.
+    if bg-set and not label-bg-set and not is-transparent(vars.at("bg")) {
+      vars.insert("label-bg", vars.at("bg"))
     }
   }
 
@@ -466,9 +539,11 @@
   if background != auto {
     if background == none {
       vars.insert("bg", "transparent")
+      bg-color = none
     } else {
       let value = css-value(background)
       vars.insert("bg", value)
+      bg-color = if type(background) == color { background } else { none }
       if not label-bg-set {
         vars.insert("label-bg", value)
       }
@@ -476,13 +551,14 @@
   }
   if foreground != auto {
     vars.insert("fg", css-value(foreground))
+    fg-color = if type(foreground) == color { foreground } else { none }
   }
   if font != auto {
     vars.insert("font", css-font(font))
     font-set = true
   }
   if font-mono != auto {
-    vars.insert("font-mono", css-font(font-mono))
+    vars.insert("font-mono", css-font(font-mono, fallback: "monospace"))
   }
   if stroke != auto {
     vars.insert("stroke", css-value(stroke))
@@ -491,11 +567,18 @@
     vars.insert("radius", css-value(radius))
   }
   if series != auto {
-    for (index, color) in series.enumerate() {
-      if index >= 8 {
-        break
+    let colors = if type(series) == array { series } else { (series,) }
+    if colors.len() > 8 {
+      panic("pelermaid: series accepts at most 8 colors, found " + str(colors.len()))
+    }
+    if colors.len() > 0 {
+      // Repeat short palettes instead of mixing them with preset colours.
+      for index in range(8) {
+        vars.insert(
+          "series-" + str(index + 1),
+          css-value(colors.at(calc.rem(index, colors.len()))),
+        )
       }
-      vars.insert("series-" + str(index + 1), css-value(color))
     }
   }
   if font-size != auto {
@@ -505,7 +588,36 @@
     render-options.insert("idPrefix", str(id))
   }
 
-  // 4. Layout aliases. These use the same option table as `options`, but reject keys that
+  // 4. Document-adaptive neutrals. Presets are designed for their own bg/fg pair; when the
+  // page supplies a different pair, derive surfaces and borders from the colours actually
+  // in use. Explicit theme values win.
+  if auto-theme and bg-color != none and fg-color != none {
+    let dark-canvas = luminance(bg-color) < 0.5
+    let ratios = if dark-canvas {
+      (
+        "surface": 6%,
+        "surface-alt": 12%,
+        "muted": 50%,
+        "line": 50%,
+        "border": 60%,
+      )
+    } else {
+      (
+        "surface": 4%,
+        "surface-alt": 8%,
+        "muted": 55%,
+        "line": 55%,
+        "border": 85%,
+      )
+    }
+    for (name, ratio) in ratios {
+      if name not in neutral-set {
+        vars.insert(name, css-value(mix-toward(bg-color, fg-color, ratio)))
+      }
+    }
+  }
+
+  // 5. Layout aliases. These use the same option table as `options`, but reject keys that
   // do not affect layout.
   if layout != none {
     for (key, value) in layout {
@@ -517,24 +629,16 @@
             + layout-option-names.join(", ") + " (and their aliases)",
         )
       }
-      let name = option-key(key)
-      if name == "measure" {
-        validate-measure(value)
-      }
-      render-options.insert(name, value)
+      render-options.insert(option-key(key), value)
     }
   }
 
-  // 5. Raw renderer options win, as in the other Mermaid packages.
+  // 6. Raw renderer options win, as in the other Mermaid packages.
   for (key, value) in options {
-    let name = option-key(key)
-    if name == "measure" {
-      validate-measure(value)
-    }
-    render-options.insert(name, value)
+    render-options.insert(option-key(key), value)
   }
 
-  // 6. Pelermaid preserves the direction written in the diagram (`flowchart LR` stays
+  // 7. Pelermaid preserves the direction written in the diagram (`flowchart LR` stays
   // left-to-right). Pele's auto-direction flips wide LR/RL diagrams to top-down below the
   // breakpoint, which changes the diagram's meaning; opt in with auto-direction: true.
   if "autoDirection" not in render-options {
@@ -733,7 +837,7 @@
   scale: none,
   alt: none,
   align: none,
-  base-theme: "modern",
+  base-theme: "auto",
   theme: none,
   background: auto,
   foreground: auto,

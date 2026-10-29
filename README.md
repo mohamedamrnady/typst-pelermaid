@@ -110,6 +110,11 @@ configuration. Any explicit `font`, `font-size`, `foreground`, `background`, or 
 value wins over the document value. `document-context: false` uses the preset font stacks
 and colours only.
 
+Fonts are also used for measurement: the document family is passed to Pele as
+`fontFamily`, so labels are measured in the stack that is drawn. `text.font` entries can be
+dictionaries with `covers`; only their `name` is copied into CSS, and a generic fallback is
+appended when the stack does not already end in one.
+
 The preset stacks are:
 
 ```text
@@ -146,12 +151,18 @@ good approximation for proportional fonts but can still clip unusually wide or n
 glyphs. The test matrix in `tests/fonts.typ` covers both modes with a serif, a sans-serif,
 a monospace, and a missing font.
 
+`measure` is a Typst-side switch for how label widths are estimated. Pele's `monospace`
+option is different: it selects which diagram parts are *drawn* with the monospace family,
+such as code-like labels. Use `measure: "mono"` only when you also set a monospace diagram
+font; use `options: (monospace: true)` to change which parts use the mono stack without
+changing how widths are estimated.
+
 ### Themes and options
 
 ```typ
 #let source = "flowchart LR\n    A[Start] --> B[Stop]"
 #mermaid(source,
-  base-theme: "modern",          // modern (default), dark, print
+  base-theme: "auto",            // auto (default), modern, dark, print
   theme: (
     background: rgb("#ffffff"),
     foreground: rgb("#1f2328"),
@@ -160,9 +171,24 @@ a monospace, and a missing font.
     radius: 6pt,
     stroke: 1.75pt,
   ),
+  series: (rgb("#0969da"), rgb("#1a7f37")),
   options: (max-edges: 2000),
 )
 ```
+
+`base-theme: "auto"`, the default, picks `dark` for dark pages and `modern` otherwise,
+then follows the document's foreground and background. It also derives `surface`,
+`surface-alt`, `muted`, `line`, and `border` by mixing the page and text colours, so light
+text on a dark page gets dark node fills and readable borders instead of the preset's light
+surfaces. A document foreground with too little contrast against the page is ignored
+rather than made invisible.
+
+An explicit `base-theme` (`"modern"`, `"dark"`, or `"print"`) opts out of document colour
+sync and keeps that preset's palette; typography is still inherited. Explicit `theme`
+values win over derived colours, in either mode.
+
+`series` sets the chart palette. Short palettes repeat to fill all eight slots instead of
+mixing in preset colours; more than eight colours raises an error.
 
 `theme` accepts canonical Pele variables and friendly aliases. Unknown keys raise an error
 instead of becoming accidental CSS variables. Renderer options belong in `options`, not in
@@ -285,6 +311,10 @@ links stay current.
   missing-font fallback. Run it with `typst compile tests/fonts.typ`. It is verified with the
   Linux and Windows CLIs; the typst.app web app cannot be tested before the package is
   published, and its font set is whatever Typst embeds plus any fonts a user uploads.
+- `tests/theme.typ` asserts the document/preset contrast cases (light text on a dark page,
+  and an explicit dark preset on a light page), neutral derivation, low-contrast guards,
+  font dictionaries, and series cycling. `tests/theme.sh` compiles it and also checks that a
+  nine-colour `series` palette is rejected with the documented message.
 - `bun tests/prerender.mjs` renders the corpus ahead of time into `tests/prerendered/`.
   Those SVGs and their manifest are generated, not committed. `tests/prerendered.typ`
   embeds them and compiles without CtxJS once they exist.
