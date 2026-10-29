@@ -58,11 +58,16 @@ export GH_TOKEN="$token"
 gh auth setup-git
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-gh repo clone "$fork" "$tmp/fork" -- --filter=blob:none --quiet
+gh repo clone "$fork" "$tmp/fork" -- --filter=blob:none --no-tags --quiet
 repo="$tmp/fork"
 cd "$repo"
-git remote add upstream "https://github.com/$upstream.git"
-git fetch --depth=1 upstream main
+upstream_url="https://github.com/$upstream.git"
+if git remote get-url upstream >/dev/null 2>&1; then
+  git remote set-url upstream "$upstream_url"
+else
+  git remote add upstream "$upstream_url"
+fi
+git fetch --depth=1 --filter=blob:none upstream main
 
 if git cat-file -e "upstream/main:$target" 2>/dev/null; then
   echo "already published upstream: $target"
