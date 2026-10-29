@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant C as Client
+    participant A as Auth server
+    participant R as Resource API
+    U->>C: Sign in
+    C->>A: Authorization request
+    A-->>U: Consent screen
+    U->>A: Approve
+    A-->>C: Authorization code
+    C->>A: Exchange code
+    A-->>C: Access token
+    C->>R: Request with token
+    R-->>C: Protected resource
+    C-->>U: Show data

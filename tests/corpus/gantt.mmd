@@ -1,0 +1,11 @@
+gantt
+    title Release plan
+    dateFormat YYYY-MM-DD
+    section Design
+    Draft :a1, 2026-01-05, 10d
+    Review :a2, after a1, 5d
+    section Build
+    Implement :b1, after a2, 20d
+    Test :b2, after b1, 10d
+    section Ship
+    Release :milestone, after b2, 0d

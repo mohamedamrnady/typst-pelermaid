@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build and test (${{ matrix.typst }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        typst: ["0.15.0", "0.15.1"]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.3"
+
+      - uses: typst-community/setup-typst@v5
+        with:
+          typst-version: ${{ matrix.typst }}
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Build bundle and bytecode
+        run: ./scripts/build.sh
+
+      - name: Verify committed bytecode
+        run: git diff --exit-code -- pele.kbc1
+
+      - name: Smoke test
+        run: bun tests/smoke.mjs
+
+      - name: Check release metadata
+        run: ./scripts/check-release.sh
+
+      - name: Build diagram gallery PDFs
+        run: ./scripts/build-diagrams.sh artifacts
+
+      - name: Compile font matrix
+        run: typst compile --root . tests/fonts.typ artifacts/fonts.pdf
+
+      - name: Compile each corpus diagram in isolation
+        run: ./tests/compile-corpus.sh
+
+      - name: Stage package payload
+        run: ./scripts/stage-package.sh
+
+      - name: Compile examples against staged payload
+        run: |
+          for file in examples/*.typ sample.typ; do
+            typst compile --root . --package-path dist/packages "$file" "/tmp/$(basename "${file%.typ}").pdf"
+          done
+
+      - name: Package checker
+        if: matrix.typst == '0.15.1'
+        env:
+          PACKAGE_CHECK_ONLINE: "1"
+        run: ./scripts/package-check.sh

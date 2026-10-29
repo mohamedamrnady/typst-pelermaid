@@ -1,0 +1,10 @@
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant A as App
+    participant D as Database
+    U->>A: Submit form
+    A->>D: INSERT order
+    D-->>A: order id
+    A-->>U: Confirmation
+    Note over U,A: End-to-end request

@@ -1,0 +1,14 @@
+{
+  "name": "pelermaid-js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=esm --minify --target=es2022 --legal-comments=none --outfile=dist/pele.mjs"
+  },
+  "dependencies": {
+    "pele": "1.12.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

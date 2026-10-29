@@ -1,0 +1,16 @@
+erDiagram
+    CUSTOMER ||--o{ CART : owns
+    CART ||--|{ CART_ITEM : contains
+    PRODUCT ||--o{ CART_ITEM : "added as"
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : "ordered as"
+    CUSTOMER {
+        uuid id
+        string email
+    }
+    ORDER {
+        uuid id
+        string status
+        date created
+    }

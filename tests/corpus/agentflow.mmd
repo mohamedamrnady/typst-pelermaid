@@ -1,0 +1,8 @@
+agentflow-beta TB
+    connector llm["LLM API"]
+    flow team["Research team"]
+        city["city"]
+        city@{ shape: input, type: "String", value: "Stockholm" }
+        summary["summarize"]
+        city --> summary
+    end

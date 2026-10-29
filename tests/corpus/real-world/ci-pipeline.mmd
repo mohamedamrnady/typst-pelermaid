@@ -1,0 +1,10 @@
+flowchart LR
+    push([git push]) --> lint{Lint}
+    lint -->|fail| report[Report]
+    lint -->|pass| test[Test suite]
+    test -->|fail| report
+    test -->|pass| build[Build package]
+    build --> stage[Stage docs]
+    stage --> publish[Publish]
+    report --> notify[Notify author]
+    publish --> notify

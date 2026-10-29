@@ -1,0 +1,11 @@
+requirementDiagram
+    requirement login {
+        id: 1
+        text: "Users can sign in"
+        risk: medium
+        verifymethod: test
+    }
+    element webapp {
+        type: simulation
+    }
+    webapp - satisfies -> login

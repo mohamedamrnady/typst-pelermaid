@@ -1,0 +1,7 @@
+flowchart TD
+    A((Start)) --> B[/Input score/]
+    B --> C{Score >= 5?}
+    C -->|Yes| D[/Output Pass/]
+    C -->|No| E[/Output Fail/]
+    D --> F((End))
+    E --> F

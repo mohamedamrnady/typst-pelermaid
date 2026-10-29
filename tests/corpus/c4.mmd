@@ -1,0 +1,11 @@
+C4Container
+    title Internet banking
+    Person(customer, "Customer", "Uses the service")
+    System_Boundary(b, "Bank") {
+        Container(web, "Web app", "TypeScript", "Shows balances")
+        Container(api, "API", "Rust", "Business logic")
+        ContainerDb(db, "Database", "PostgreSQL", "Stores accounts")
+    }
+    Rel(customer, web, "Uses", "HTTPS")
+    Rel(web, api, "Calls", "JSON")
+    Rel(api, db, "Reads and writes")

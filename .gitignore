@@ -1,0 +1,9 @@
+js/node_modules/
+js/dist/
+.cache/
+dist/
+artifacts/
+
+# Generated diagram sources (tests/prerender.mjs) and local test output
+tests/prerendered/
+tests/*.pdf

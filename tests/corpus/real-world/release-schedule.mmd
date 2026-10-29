@@ -1,0 +1,13 @@
+gantt
+    title Package release
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+    section Prepare
+    Code freeze :done, 2026-01-05, 3d
+    Documentation :active, 2026-01-08, 8d
+    section Verify
+    Golden tests :2026-01-16, 5d
+    Package check :2026-01-21, 2d
+    section Publish
+    Tag release :milestone, 2026-01-23, 0d
+    Submit to Universe :2026-01-23, 1d
