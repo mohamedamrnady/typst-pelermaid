@@ -23,6 +23,7 @@ target="packages/preview/$name/$version"
 
 [ -d "$stage" ] || { echo "error: staged package not found at $stage" >&2; exit 1; }
 [ -f "$stage/typst.toml" ] || { echo "error: staged package has no typst.toml" >&2; exit 1; }
+stage="$(cd "$stage" && pwd -P)" 
 
 token="${TYPST_PACKAGES_TOKEN:-${GH_TOKEN:-}}"
 if [ -z "$token" ] && [ "${DRY_RUN:-0}" != 1 ]; then
@@ -75,9 +76,9 @@ if git cat-file -e "upstream/main:$target" 2>/dev/null; then
 fi
 
 git switch -c "$branch" upstream/main >/dev/null 2>&1 || git switch -C "$branch" upstream/main
-mkdir -p "$(dirname "$target")"
 rm -rf "$target"
-cp -a "$stage" "$target"
+mkdir -p "$target"
+cp -a "$stage"/. "$target"/
 git add -- "$target"
 if git diff --cached --quiet; then
   echo "no staged changes to submit"
