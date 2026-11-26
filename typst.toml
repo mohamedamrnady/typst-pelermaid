@@ -1,6 +1,6 @@
 [package]
 name = "pelermaid"
-version = "0.1.0"
+version = "0.2.0"
 entrypoint = "lib.typ"
 authors = ["Mohamed Nady <@mohamedamrnady>"]
 license = "MIT AND ISC"

@@ -6,7 +6,7 @@
     "build": "esbuild src/main.js --bundle --format=esm --minify --target=es2022 --legal-comments=none --outfile=dist/pele.mjs"
   },
   "dependencies": {
-    "pele": "1.12.0"
+    "pele": "1.13.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

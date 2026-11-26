@@ -9,8 +9,8 @@ shipped as separate files so they travel with the bundled code.
 ### Pele
 
 - Project: Pele (<https://github.com/obsidianmd/pele>)
-- Version: 1.12.0
-- Source revision: `8aff183` (Release 1.12.0, 2026-10-26)
+- Version: 1.13.0
+- Source revision: `3a2f075` (Release 1.13.0, 2026-10-31)
 - License: MIT, copyright (c) 2026 kepano
 - License text: [`LICENSES/PELE-MIT.txt`](LICENSES/PELE-MIT.txt)
 
@@ -21,7 +21,7 @@ Pele is bundled by `js/` with esbuild and compiled to `pele.kbc1` with
 
 - Project: Lucide (<https://lucide.dev>)
 - Assets: `rotate-ccw`, used by Pele's zoom controls, plus the 79 diagram icons
-  copied from Pele 1.12.0's website resolver (`website/src/lib/lucide-icons.ts`)
+  copied from Pele 1.13.0's website resolver (`website/src/lib/lucide-icons.ts`)
 - Version: Lucide v1.14.0
 - License: ISC, copyright (c) 2026 Lucide Icons and Contributors; some icons derive
   from Feather (MIT, copyright (c) 2013-2023 Cole Bemis)

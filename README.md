@@ -16,7 +16,7 @@ targets Mermaid 12 syntax.
 Use the published package with Typst 0.15 or newer:
 
 ```typ
-#import "@preview/pelermaid:0.1.0": mermaid, mermaid-svg, mermaid-result, mermaid-figure, show-mermaid-blocks
+#import "@preview/pelermaid:0.2.0": mermaid, mermaid-svg, mermaid-result, mermaid-figure, show-mermaid-blocks
 ```
 
 Typst downloads the package and its dependencies on first use.
@@ -24,7 +24,7 @@ Typst downloads the package and its dependencies on first use.
 ## Usage
 
 ```typ
-#import "@preview/pelermaid:0.1.0": mermaid, mermaid-svg, mermaid-result, mermaid-figure, show-mermaid-blocks
+#import "@preview/pelermaid:0.2.0": mermaid, mermaid-svg, mermaid-result, mermaid-figure, show-mermaid-blocks
 
 #mermaid("
 flowchart TD

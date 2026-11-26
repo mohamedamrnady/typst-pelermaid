@@ -30,7 +30,7 @@ Pinned dependencies:
 
 | Dependency | Version |
 | --- | --- |
-| Pele | `1.12.0` (`js/package.json`) |
+| Pele | `1.13.0` (`js/package.json`) |
 | CtxJS | `@preview/ctxjs:0.5.0` (`lib.typ`) |
 | CtxJS source commit | `c4c270035bac9a825564ca1257735c704ec8988a` (`scripts/build.sh`) |
 | Lucide subset | v1.14.0, 79 glyphs and 31 aliases |

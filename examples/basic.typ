@@ -1,4 +1,4 @@
-#import "@preview/pelermaid:0.1.0": mermaid
+#import "@preview/pelermaid:0.2.0": mermaid
 
 #set page(width: 16cm, height: auto, margin: 1cm)
 #set text(font: "DejaVu Sans", size: 10pt)

@@ -7,7 +7,7 @@
 //   typst compile sample.typ sample.pdf
 //
 // The full diagram corpus lives in tests/corpus.typ.
-#import "@preview/pelermaid:0.1.0": mermaid, mermaid-figure, mermaid-result, show-mermaid-blocks
+#import "@preview/pelermaid:0.2.0": mermaid, mermaid-figure, mermaid-result, show-mermaid-blocks
 
 #set page(width: 21cm, height: 29.7cm, margin: 2cm)
 #set text(font: "DejaVu Sans", size: 11pt)

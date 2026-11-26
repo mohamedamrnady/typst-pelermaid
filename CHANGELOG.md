@@ -1,13 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
+- Bundle Pele 1.13.0 (MIT) and its Lucide icon (ISC) as `pele.kbc1`. Diagrams pick up
+  Pele's improved edge routing around subgraph borders, block and quadrant text sizing, and
+  Mermaid palette handling for pie, git graph, timeline, radar, treemap, mindmap, Venn, and
+  XY charts. `series` continues to set the palette for every chart type.
 - Resolve Mermaid icon names with the same 79-icon Lucide v1.14.0 subset and 31 aliases
   as pele.run, so `fa:user`, `fas fa-twitter`, and `mdi mdi-skull-outline` draw in
   flowcharts and the other diagram types Pele supports. Architecture and tree view keep
   Pele's built-in symbols.
 - Add `icons:` (or `options: (icons: ...)`) for trusted document-supplied inner SVG
   markup; custom entries override the bundled set.
+- Split user documentation and development documentation: `README.md` covers usage,
+  while `developer.md` covers building, testing, and releasing.
+- Consolidate the automated tests into an SVG parity check plus configuration assertions,
+  and ship a single `corpus.pdf` gallery instead of the three-document comparison.
 
 ## 0.1.0
 
