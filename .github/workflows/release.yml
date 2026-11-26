@@ -78,21 +78,18 @@ jobs:
       - name: Verify committed bytecode
         run: git diff --exit-code -- pele.kbc1
 
-      - name: Smoke test
-        run: bun tests/smoke.mjs
+      - name: Extension matches Pele
+        run: bun tests/parity.mjs
 
-      - name: Theme and contrast checks
-        run: ./tests/theme.sh
-
-      - name: Icon checks
-        run: ./tests/icons.sh
+      - name: Config assertions
+        run: typst eval --root . --in tests/config.typ 'none'
 
       - name: Check release metadata
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: ./scripts/check-release.sh
 
-      - name: Build diagram gallery PDFs
+      - name: Build diagram gallery PDF
         run: ./scripts/build-diagrams.sh artifacts
 
       - name: Stage package payload

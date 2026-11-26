@@ -1,15 +1,10 @@
-// Contrast, font, and series behaviour.
+// Configuration assertions: preset selection, document adaptation, fonts, series, icon
+// resolution, and transparent-canvas decorations.
 //
-// Compile with:
+//   typst eval --root . --in tests/config.typ 'none'
 //
-//   typst compile tests/theme.typ tests/theme.pdf
-//
-// Every check is an assertion, so a failing build is the test result. The diagrams at the
-// end make sure the derived colours survive a real render.
-#import "../lib.typ": build-config, css-font, luminance, mermaid
-
-#set page(width: 21cm, height: 29.7cm, margin: 2cm)
-#set text(size: 10pt)
+// Every check is an assertion, so a failing evaluation is the test result.
+#import "/lib.typ": build-config, css-font, luminance, mermaid-svg
 
 // --- helpers -----------------------------------------------------------------------------
 
@@ -124,26 +119,62 @@
   assert.eq(cycle.theme.at("series-" + str(index)), expected)
 }
 
-// --- renders -------------------------------------------------------------------------------
+// --- bundled icons -------------------------------------------------------------------------
 
-= Contrast cases
+#let user = mermaid-svg("flowchart LR\n    a@{ icon: \"fa:user\", form: \"square\", label: \"User\" }")
+#assert(user.contains("data-icon=\"fa:user\""))
+#assert(user.contains("M19 21v-2a4 4 0 0 0-4-4H9"))
 
-== Dark page, default base theme
+#let twitter = mermaid-svg("flowchart LR\n    a@{ icon: \"fas fa-twitter\", form: \"square\" }")
+#assert(twitter.contains("data-icon=\"fas fa-twitter\""))
+#assert(twitter.contains("M16 7h.01"))
 
-#[
-  #set page(fill: rgb("#0d1117"))
-  #set text(fill: rgb("#e6edf3"), font: "DejaVu Sans")
-  #mermaid("flowchart LR\n    A[Start] --> B[Finish]", width: 60%)
-]
+#let skull = mermaid-svg("flowchart LR\n    a@{ icon: \"mdi mdi-skull-outline\", form: \"square\" }")
+#assert(skull.contains("data-icon=\"mdi mdi-skull-outline\""))
+#assert(skull.contains("m12.5 17-.5-1"))
 
-== Explicit dark preset on a light page
+#let unknown = mermaid-svg("flowchart LR\n    a@{ icon: \"unknown:icon\", form: \"square\" }")
+#assert(unknown.contains("data-icon=\"unknown:icon\""))
 
-#[
-  #set page(fill: white)
-  #set text(fill: black, font: "Libertinus Serif")
-  #mermaid(
-    "flowchart LR\n    A[Start] --> B[Finish]",
-    width: 60%,
-    base-theme: "dark",
-  )
-]
+// --- custom icons --------------------------------------------------------------------------
+
+#let custom = mermaid-svg(
+  "flowchart LR\n    a@{ icon: \"acme:database\", form: \"square\" }",
+  icons: ("acme:database": "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/>"),
+)
+#assert(custom.contains("data-icon=\"acme:database\""))
+#assert(custom.contains("ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\""))
+
+// Custom entries win over the bundled glyph, including when the requested name goes through
+// an alias (`fa:home` -> house).
+#let overridden = mermaid-svg(
+  "flowchart LR\n    a@{ icon: \"fa:home\", form: \"square\" }",
+  icons: ("house": "<path id=\"custom-house\"/>"),
+)
+#assert(overridden.contains("id=\"custom-house\""))
+
+// The dictionary is also accepted through `options`, for parity with the named argument.
+#let via-options = mermaid-svg(
+  "flowchart LR\n    a@{ icon: \"acme:thing\", form: \"square\" }",
+  options: (icons: ("acme:thing": "<circle id=\"custom-thing\" r=\"9\"/>")),
+)
+#assert(via-options.contains("id=\"custom-thing\""))
+
+// --- transparent canvas --------------------------------------------------------------------
+
+// Transparent canvases must keep decorations that Pele paints with the canvas colour:
+// treemap leaf labels, pie labels, and edge-label backgrounds. The sanitizer maps the
+// internal `--_bg` to the opaque `label-bg` colour while leaving the page transparent.
+#let treemap = mermaid-svg(
+  "treemap-beta\n    \"Frontend\"\n        \"Components\": 30\n        \"Styles\": 12\n    \"Backend\"\n        \"API\": 40\n        \"Database\": 18\n",
+  background: none,
+)
+#assert(not treemap.contains(regex("class=\"pele-leaves\"[^>]*fill=\"(?:transparent|none)\"")))
+#assert(treemap.contains(regex("class=\"pele-leaves\"[^>]*fill=\"#ffffff\"")))
+#assert(not treemap.contains(regex("<rect x=\"0\" y=\"0\" width=\"[\\d.]+\" height=\"[\\d.]+\" fill=\"#ffffff\"/>")))
+
+#let pie = mermaid-svg(
+  "pie\n    \"Writing\" : 35\n    \"Review\" : 25\n",
+  background: none,
+)
+#assert(not pie.contains(regex("class=\"pele-slice-labels\"[^>]*fill=\"(?:transparent|none)\"")))

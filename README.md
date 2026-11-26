@@ -6,15 +6,10 @@ Source: <https://github.com/mohamedamrnady/typst-pelermaid>
 
 Pelermaid is an independent wrapper, not an official Obsidian, Pele, or Mermaid package.
 
-Pele is a fast Mermaid renderer with **its own layout engine and visual style**. Pelermaid
-gives you Mermaid syntax inside Typst; it does not use Mermaid.js and does not promise
-pixel-identical output to Mermaid.js. Text measures, spacing, wrapping, and edge routing are
-Pele's. Pele 1.12.0 targets Mermaid 12.1.0 syntax.
-
-Note: The bundling of a JavaScript library and JavaScript Engine inside the package defeats the fast claim for the extension compared to native extensions like `merman`. This extension utilizes Pele's layout engine and Obsidian's maintainability and acts as a drop-in replacement for documents already using `merman`.
-
-The JavaScript runtime is [CtxJS](https://github.com/lublak/typst-ctxjs-package); the Pele
-bundle is shipped as QuickJS bytecode (`pele.kbc1`).
+Pele has its own layout engine and visual style. Pelermaid gives you Mermaid syntax inside
+Typst; it does not use Mermaid.js and does not promise pixel-identical output to Mermaid.js.
+Text measures, spacing, wrapping, and edge routing are Pele's. The bundled Pele release
+targets Mermaid 12 syntax.
 
 ## Install
 
@@ -24,18 +19,7 @@ Use the published package with Typst 0.15 or newer:
 #import "@preview/pelermaid:0.1.0": mermaid, mermaid-svg, mermaid-result, mermaid-figure, show-mermaid-blocks
 ```
 
-Typst downloads the package and its dependency `@preview/ctxjs:0.5.0` on first use.
-
-For local development, the helper scripts install the working tree into Typst's local
-package namespace:
-
-```bash
-# Linux / WSL Typst
-./scripts/install-local.sh
-
-# Native Windows Typst when running under WSL
-./scripts/install-windows.sh
-```
+Typst downloads the package and its dependencies on first use.
 
 ## Usage
 
@@ -55,12 +39,12 @@ flowchart TD
 
 `mermaid` embeds an image. `mermaid-svg` returns the sanitized SVG text. `mermaid-result`
 returns a dictionary with `ok`, `svg`, `width`, `height`, `type`, and error fields.
-`mermaid-figure` wraps the image in a Typst `figure`.
+`mermaid-figure` wraps the image in a Typst `figure`. `show-mermaid-blocks` renders
+`mermaid` raw blocks.
 
 Runnable examples are in [`examples/`](examples/). [`sample.typ`](sample.typ) is a
-self-contained tour that imports `@preview/pelermaid:0.1.0`, so compile it with
-`--package-path dist/packages` after staging, or after `./scripts/install-local.sh`. The full
-diagram corpus lives in `tests/corpus.typ`; each release attaches the compiled gallery as
+self-contained tour that imports the extension. The full diagram gallery is attached to each
+release as
 [`corpus.pdf`](https://github.com/mohamedamrnady/typst-pelermaid/releases/latest/download/corpus.pdf).
 
 ### Responsive width
@@ -126,10 +110,9 @@ These are broad fallbacks, not a requirement. At minimum, provide a sans-serif f
 proportional text and a monospace font for code-like labels. Typst embeds DejaVu Sans Mono,
 Libertinus Serif, and New Computer Modern; DejaVu Sans, Liberation Sans, Arial, and Consolas
 come from the operating system. If none of the requested families exist, Typst warns and
-falls back to its default font, as covered by `tests/fonts.typ`. With the default
-`document-context: true` the preset stack is not used anyway: the diagram inherits the
-document's font, so diagrams match the surrounding text even on a machine with no extra
-fonts.
+falls back to its default font. With the default `document-context: true` the preset stack is
+not used anyway: the diagram inherits the document's font, so diagrams match the surrounding
+text even on a machine with no extra fonts.
 
 ### Text metrics
 
@@ -145,11 +128,9 @@ set a monospace font:
 #mermaid(source, measure: "mono", font: ("DejaVu Sans Mono",))
 ```
 
-Neither mode uses real font metrics, because the QuickJS runtime has no fonts. Both are
-estimates. `measure: "mono"` is exact for monospace advance widths; `measure: "auto"` is a
-good approximation for proportional fonts but can still clip unusually wide or narrow
-glyphs. The test matrix in `tests/fonts.typ` covers both modes with a serif, a sans-serif,
-a monospace, and a missing font.
+Neither mode uses real font metrics, because the runtime has no fonts. Both are estimates.
+`measure: "mono"` is exact for monospace advance widths; `measure: "auto"` is a good
+approximation for proportional fonts but can still clip unusually wide or narrow glyphs.
 
 `measure` is a Typst-side switch for how label widths are estimated. Pele's `monospace`
 option is different: it selects which diagram parts are *drawn* with the monospace family,
@@ -206,9 +187,8 @@ Pele owns layout, and most "layout" settings are in fact renderer options.
 ### Icons
 
 Pele does not draw icon packs itself; it asks the host for the inner SVG markup of names like
-`fa:user`. Pelermaid bundles the same Lucide v1.14.0 subset that [pele.run](https://pele.run)
-uses — 79 glyphs plus 31 aliases — so common Font Awesome and Material Design Icons spellings
-work without configuration:
+`fa:user`. Pelermaid bundles the same Lucide subset that [pele.run](https://pele.run) uses,
+so common Font Awesome and Material Design Icons spellings work without configuration:
 
 ```typ
 #mermaid("
@@ -263,11 +243,10 @@ Pele also draws built-in `database`, `server`, `disk`, `internet`, and `cloud` s
 
 ## Diagram support and limits
 
-The corpus under `tests/corpus/` covers every diagram family Pele supports, including
-flowchart, sequence, class, state, ER, gantt, pie, mindmap, timeline, journey, quadrant,
-XY chart, git graph, sankey, architecture, block, kanban, packet, radar, treemap, and C4.
-Some Mermaid features are intentionally not implemented; Pele reports an error rather than
-falling back to Mermaid.js.
+Pelermaid supports the diagram families Pele supports, including flowchart, sequence, class,
+state, ER, gantt, pie, mindmap, timeline, journey, quadrant, XY chart, git graph, sankey,
+architecture, block, kanban, packet, radar, treemap, and C4. Some Mermaid features are
+intentionally not implemented; Pele reports an error rather than falling back to Mermaid.js.
 
 Pele applies these limits (defaults shown):
 
@@ -310,86 +289,11 @@ from the bundled Lucide subset or the trusted `icons` dictionary (see [Icons](#i
 #mermaid(source, alt: "Flowchart: the user enters a score; scores of five or more pass.")
 ```
 
-## Build
-
-Requirements: Bun, Rust, and Cargo.
-
-```bash
-./scripts/build.sh
-```
-
-This installs the pinned `pele@1.12.0` npm package, builds `js/dist/pele.mjs`, obtains
-`ctxjs_module_bytecode_builder` from the pinned CtxJS source, and writes `pele.kbc1`. Pele is
-consumed from npm; no Git submodule is required.
-
-The JavaScript wrapper is in `js/src/main.js`; SVG sanitization is in
-`js/src/sanitize.js`. Tests live in `tests/`.
-
-To rebuild the diagram gallery PDFs locally:
-
-```bash
-./scripts/build-diagrams.sh            # writes artifacts/*.pdf
-```
-
-## Diagram gallery
-
-Every tagged release attaches three PDFs built from the test documents:
-
-| PDF | What it shows |
-| --- | --- |
-| [corpus.pdf](https://github.com/mohamedamrnady/typst-pelermaid/releases/latest/download/corpus.pdf) | Runtime corpus rendered through CtxJS |
-| [prerendered.pdf](https://github.com/mohamedamrnady/typst-pelermaid/releases/latest/download/prerendered.pdf) | The same corpus rendered ahead of time by Pele |
-| [compare.pdf](https://github.com/mohamedamrnady/typst-pelermaid/releases/latest/download/compare.pdf) | Both side by side, with the byte-equality summary |
-
-GitHub's `/releases/latest/download/` path always redirects to the newest release, so these
-links stay current.
-
-## Releasing
-
-Releases are built by `.github/workflows/release.yml`. Configure this once:
-
-1. Create a `release` environment (Settings → Environments) with a required reviewer.
-2. Add `TYPST_PACKAGES_TOKEN` as a secret on that environment, not at repository level.
-   It only needs to push a branch to your `typst/packages` fork, so a fine-grained PAT
-   with Contents: read/write on that fork is enough. Create it on the same account as
-   `PACKAGES_FORK_OWNER`, and make sure that account already has a `packages` fork.
-3. Restrict environment deployments to `v*`, plus `main` if you want to rehearse with
-   `workflow_dispatch`.
-4. Add the repository variable `PUSH_PACKAGES_FORK=true` when tag pushes should push the
-   branch. Without it, tag pushes only create the GitHub release.
-
-The job pushes `pelermaid-v<version>` to your fork and prints a compare URL; open the pull
-request against `typst/packages` yourself. Rehearse with a `workflow_dispatch` of the
-version with `push_packages` off, then run it again with the input on (or against a scratch
-fork) before publishing a real version.
-
-## Tests
-
-- `tests/corpus/` contains one `.mmd` file per diagram family Pele supports, plus a few
-  real-world diagrams. `tests/corpus.typ` renders all of them; `tests/compile-corpus.sh`
-  compiles each source in isolation.
-- `tests/fonts.typ` covers both measure modes with a serif, a sans-serif, a monospace, and a
-  missing-font fallback. Run it with `typst compile tests/fonts.typ`. It is verified with the
-  Linux and Windows CLIs; the typst.app web app cannot be tested before the package is
-  published, and its font set is whatever Typst embeds plus any fonts a user uploads.
-- `tests/theme.typ` asserts the document/preset contrast cases (light text on a dark page,
-  and an explicit dark preset on a light page), neutral derivation, low-contrast guards,
-  font dictionaries, and series cycling. `tests/theme.sh` compiles it and also checks that a
-  nine-colour `series` palette is rejected with the documented message.
-- `bun tests/prerender.mjs` renders the corpus ahead of time into `tests/prerendered/`.
-  Those SVGs and their manifest are generated, not committed. `tests/prerendered.typ`
-  embeds them and compiles without CtxJS once they exist.
-- `tests/compare.typ` renders each corpus source both ways, side by side, and reports
-  whether the runtime SVG and the pre-rendered SVG are byte-identical.
-- `scripts/build-diagrams.sh` regenerates the pre-renders, fails if runtime and pre-rendered
-  output differ, and writes the three gallery PDFs to `artifacts/`. CI and the release
-  workflow run the same script.
-- `tests/smoke.mjs` checks the JavaScript bundle and SVG sanitizer under Bun.
-
 ## Notes and limitations
 
-- `@preview/ctxjs:0.5.0` is required. If an offline or Tinymist setup cannot resolve preview
-  packages, vendor the CtxJS package and change the import in `lib.typ`.
+- Pelermaid depends on CtxJS. If an offline or Tinymist setup cannot resolve preview
+  packages, vendor CtxJS and change the import in `lib.typ`; see
+  [developer.md](https://github.com/mohamedamrnady/typst-pelermaid/blob/main/developer.md).
 - `background: none` produces a transparent canvas. Pele paints several decorations with the
   canvas colour, so edge labels, edge casings, arrow markers, pie labels, sequence-number
   halos, and treemap labels fall back to the opaque `label-bg` (the preset background by
@@ -402,6 +306,11 @@ fork) before publishing a real version.
   and it does not load external icon packs. Icon names outside the bundled Lucide subset
   must be supplied through `icons`; otherwise Pele leaves the icon frame empty. Unsupported
   diagram types raise a Pele error.
+
+## Development
+
+See [developer.md](https://github.com/mohamedamrnady/typst-pelermaid/blob/main/developer.md)
+for building, testing, and releasing Pelermaid.
 
 ## License
 

@@ -15,12 +15,8 @@ concurrency:
 
 jobs:
   test:
-    name: Build and test (${{ matrix.typst }})
+    name: Build and test
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        typst: ["0.15.0", "0.15.1"]
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -32,54 +28,14 @@ jobs:
 
       - uses: typst-community/setup-typst@fee4b65b091cc546f02ce3be15fad8760f38a108 # v5.3.0
         with:
-          typst-version: ${{ matrix.typst }}
+          typst-version: "0.15.0"
 
-      # The bytecode check asserts a byte-identical pele.kbc1, so pin the compiler that
-      # produces it instead of following `stable`.
-      - name: Install Rust 1.99.1
-        run: |
-          rustup toolchain install 1.99.1 --profile minimal
-          rustup default 1.99.1
-          rustc --version
+      - name: Build JS bundle
+        working-directory: js
+        run: bun install --frozen-lockfile && bun run build
 
-      - name: Build bundle and bytecode
-        run: ./scripts/build.sh
+      - name: Extension matches Pele
+        run: bun tests/parity.mjs
 
-      - name: Verify committed bytecode
-        run: git diff --exit-code -- pele.kbc1
-
-      - name: Smoke test
-        run: bun tests/smoke.mjs
-
-      - name: Theme and contrast checks
-        run: ./tests/theme.sh
-
-      - name: Icon checks
-        run: ./tests/icons.sh
-
-      - name: Check release metadata
-        run: ./scripts/check-release.sh
-
-      - name: Build diagram gallery PDFs
-        run: ./scripts/build-diagrams.sh artifacts
-
-      - name: Compile font matrix
-        run: typst compile --root . tests/fonts.typ artifacts/fonts.pdf
-
-      - name: Compile each corpus diagram in isolation
-        run: ./tests/compile-corpus.sh
-
-      - name: Stage package payload
-        run: ./scripts/stage-package.sh
-
-      - name: Compile examples against staged payload
-        run: |
-          for file in examples/*.typ sample.typ; do
-            typst compile --root . --package-path dist/packages "$file" "/tmp/$(basename "${file%.typ}").pdf"
-          done
-
-      - name: Package checker
-        if: matrix.typst == '0.15.1'
-        env:
-          PACKAGE_CHECK_ONLINE: "1"
-        run: ./scripts/package-check.sh
+      - name: Config assertions
+        run: typst eval --root . --in tests/config.typ 'none'

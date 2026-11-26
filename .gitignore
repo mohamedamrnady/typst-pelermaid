@@ -4,6 +4,5 @@ js/dist/
 dist/
 artifacts/
 
-# Generated diagram sources (tests/prerender.mjs) and local test output
-tests/prerendered/
+# Local test output
 tests/*.pdf

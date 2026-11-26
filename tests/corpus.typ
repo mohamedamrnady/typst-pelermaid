@@ -1,6 +1,6 @@
 // Renders every diagram family Pele 1.12.0 supports, plus a few real-world diagrams.
-// Each source is also compiled independently by tests/compile-corpus.sh so a failing
-// family is easy to isolate.
+// The resulting corpus.pdf is the visual check attached to releases; tests/parity.mjs
+// checks the same sources against Pele's JavaScript output.
 #import "../lib.typ": mermaid
 
 #set page(width: 21cm, height: 29.7cm, margin: 1.8cm)
@@ -8,6 +8,7 @@
 
 #let corpus = (
   (family: "flowchart", file: "corpus/flowchart.mmd"),
+  (family: "icons", file: "corpus/icons.mmd"),
   (family: "sequence", file: "corpus/sequence.mmd"),
   (family: "class", file: "corpus/class.mmd"),
   (family: "state", file: "corpus/state.mmd"),
