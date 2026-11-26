@@ -26,6 +26,7 @@ files=(
   sample.typ
   LICENSES/PELE-MIT.txt
   LICENSES/LUCIDE-ISC.txt
+  LICENSES/FEATHER-MIT.txt
   LICENSES/CTXJS-MIT.txt
 )
 examples=(

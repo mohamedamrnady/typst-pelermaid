@@ -26,13 +26,15 @@ Third-party components distributed with Pelermaid
 
 The file `pele.kbc1` is a compiled bundle of the Pele renderer. Pele is
 licensed under the MIT License, copyright (c) 2026 kepano. The bundle also
-contains the "rotate-ccw" icon from Lucide, licensed under the ISC License,
-copyright (c) 2026 Lucide Icons and Contributors.
+contains a subset of Lucide icons (79 diagram icons plus the "rotate-ccw"
+zoom-control icon), licensed under the ISC License, copyright (c) 2026 Lucide
+Icons and Contributors.
 
 The full license texts are shipped in:
 
 - `LICENSES/PELE-MIT.txt`
 - `LICENSES/LUCIDE-ISC.txt`
+- `LICENSES/FEATHER-MIT.txt`
 
 `LICENSES/CTXJS-MIT.txt` covers the CtxJS runtime dependency, which is not
 bundled in this package.

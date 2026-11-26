@@ -84,6 +84,9 @@ jobs:
       - name: Theme and contrast checks
         run: ./tests/theme.sh
 
+      - name: Icon checks
+        run: ./tests/icons.sh
+
       - name: Check release metadata
         env:
           RELEASE_VERSION: ${{ inputs.version }}

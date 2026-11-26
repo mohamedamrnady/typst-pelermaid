@@ -85,7 +85,7 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git -c user.name="$owner" -c user.email="$owner@users.noreply.github.com" \
-  commit -m "$name: $version"
+  commit -m "$name:$version"
 
 # Always branch from current upstream main so unrelated history never appears in the PR.
 git fetch origin "$branch" >/dev/null 2>&1 || true

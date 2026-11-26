@@ -1,4 +1,5 @@
 import { render as peleRender } from "pele";
+import { createIconResolver } from "./icons.js";
 import { sanitize } from "./sanitize.js";
 
 // Monospace advance is 0.6em for regular text and 1.2em for CJK/wide glyphs. This is only
@@ -69,6 +70,13 @@ function normalizeOptions(options, theme) {
   out.responsive = out.responsive !== true ? false : true;
   out.links = out.links === true;
   out.images = out.images === true;
+
+  // Pele takes a callback, but Typst can only send data. `icons` is a name -> inner SVG
+  // fragment dictionary from the wrapper; turn it into the resolver Pele expects, with
+  // the bundled Lucide subset as the fallback.
+  const customIcons = out.icons;
+  delete out.icons;
+  out.icons = createIconResolver(customIcons);
 
   if (measure === "mono") {
     out.measurer = monoMeasurer;

@@ -54,6 +54,9 @@ jobs:
       - name: Theme and contrast checks
         run: ./tests/theme.sh
 
+      - name: Icon checks
+        run: ./tests/icons.sh
+
       - name: Check release metadata
         run: ./scripts/check-release.sh
 

@@ -17,13 +17,16 @@ shipped as separate files so they travel with the bundled code.
 Pele is bundled by `js/` with esbuild and compiled to `pele.kbc1` with
 `ctxjs_module_bytecode_builder` from CtxJS 0.5.0.
 
-### Lucide icon
+### Lucide icons
 
 - Project: Lucide (<https://lucide.dev>)
-- Asset: `rotate-ccw`, used by Pele's zoom controls
+- Assets: `rotate-ccw`, used by Pele's zoom controls, plus the 79 diagram icons
+  copied from Pele 1.12.0's website resolver (`website/src/lib/lucide-icons.ts`)
 - Version: Lucide v1.14.0
-- License: ISC, copyright (c) 2026 Lucide Icons and Contributors
-- License text: [`LICENSES/LUCIDE-ISC.txt`](LICENSES/LUCIDE-ISC.txt)
+- License: ISC, copyright (c) 2026 Lucide Icons and Contributors; some icons derive
+  from Feather (MIT, copyright (c) 2013-2023 Cole Bemis)
+- License texts: [`LICENSES/LUCIDE-ISC.txt`](LICENSES/LUCIDE-ISC.txt),
+  [`LICENSES/FEATHER-MIT.txt`](LICENSES/FEATHER-MIT.txt)
 
 ## Runtime dependency (not bundled)
 

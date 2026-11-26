@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Resolve Mermaid icon names with the same 79-icon Lucide v1.14.0 subset and 31 aliases
+  as pele.run, so `fa:user`, `fas fa-twitter`, and `mdi mdi-skull-outline` draw in
+  flowcharts and the other diagram types Pele supports. Architecture and tree view keep
+  Pele's built-in symbols.
+- Add `icons:` (or `options: (icons: ...)`) for trusted document-supplied inner SVG
+  markup; custom entries override the bundled set.
+
 ## 0.1.0
 
 Initial release.

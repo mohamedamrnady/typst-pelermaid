@@ -225,6 +225,7 @@
   "measure",
   "links",
   "images",
+  "icons",
   "monospace",
 )
 
@@ -408,6 +409,29 @@
   measure
 }
 
+// `icons` maps icon names such as `fa:user` to the inner SVG markup Pele inserts into its
+// icon frame. Values are trusted markup from the document author, not untrusted diagram
+// input. The bundled Lucide set remains the fallback for names not in this dictionary.
+#let validate-icons(icons) = {
+  if type(icons) != dictionary {
+    panic(
+      "pelermaid: icons must be a dictionary of icon names to SVG fragments, found "
+        + repr(icons),
+    )
+  }
+  let out = (:)
+  for (name, value) in icons {
+    if type(value) != str {
+      panic(
+        "pelermaid: icon " + repr(name) + " must be a string of SVG markup, found "
+          + repr(value),
+      )
+    }
+    out.insert(str(name), value)
+  }
+  out
+}
+
 // Read the surrounding document's typography and page colour. Must be called inside a
 // `context` block. Returns `none` values for fills that cannot be represented as a colour.
 #let document-values() = (
@@ -432,6 +456,7 @@
   id: none,
   layout: none,
   options: (:),
+  icons: none,
   measure: "auto",
 ) = {
   let auto-theme = base-theme == "auto"
@@ -633,9 +658,23 @@
     }
   }
 
-  // 6. Raw renderer options win, as in the other Mermaid packages.
+  // 6. Raw renderer options win, as in the other Mermaid packages. `icons` is a Pelermaid
+  // option rather than a Pele render option, but it is accepted here for parity with the
+  // named argument. It never reaches Pele as a dictionary: `main.js` turns it into the
+  // resolver callback Pele expects.
+  let icon-overrides = if icons == none { (:) } else { validate-icons(icons) }
   for (key, value) in options {
-    render-options.insert(option-key(key), value)
+    let name = option-key(key)
+    if name == "icons" {
+      for (icon-name, markup) in validate-icons(value) {
+        icon-overrides.insert(icon-name, markup)
+      }
+    } else {
+      render-options.insert(name, value)
+    }
+  }
+  if icon-overrides.len() > 0 {
+    render-options.insert("icons", icon-overrides)
   }
 
   // 7. Pelermaid preserves the direction written in the diagram (`flowchart LR` stays
@@ -850,6 +889,7 @@
   id: none,
   layout: none,
   options: (:),
+  icons: none,
   measure: "auto",
   error-mode: "panic",
   document-context: true,
@@ -872,6 +912,7 @@
       id: id,
       layout: layout,
       options: options,
+      icons: icons,
       measure: measure,
     )
 

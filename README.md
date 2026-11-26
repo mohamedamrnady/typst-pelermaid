@@ -197,10 +197,51 @@ instead of becoming accidental CSS variables. Renderer options belong in `option
 Supported renderer options include `font-size`, `font-family`, `font-mono`, `id`,
 `max-width`, `responsive`, `auto-direction`, `direction-breakpoint`, `padding`, `limit`,
 `max-edges`, `output-limit`, `link-rel`, `link-schemes`, `image-schemes`, `links`, `images`,
-`monospace`, and `now`. Diagram source can also carry Mermaid frontmatter configuration.
+`monospace`, and `now`. `icons` is a Pelermaid extension accepted in the same dictionary; see
+[Icons](#icons). Diagram source can also carry Mermaid frontmatter configuration.
 
 `layout` is a narrower alias for the layout-related subset of `options`. Prefer `options`;
 Pele owns layout, and most "layout" settings are in fact renderer options.
+
+### Icons
+
+Pele does not draw icon packs itself; it asks the host for the inner SVG markup of names like
+`fa:user`. Pelermaid bundles the same Lucide v1.14.0 subset that [pele.run](https://pele.run)
+uses — 79 glyphs plus 31 aliases — so common Font Awesome and Material Design Icons spellings
+work without configuration:
+
+```typ
+#mermaid("
+flowchart LR
+    a@{ icon: \"fa:user\", form: \"square\", label: \"User\" }
+    b@{ icon: \"fas fa-twitter\", form: \"circle\" }
+    c@{ icon: \"mdi mdi-skull-outline\", form: \"square\" }
+    a --> b --> c
+")
+```
+
+Names are normalized before lookup: the pack prefix (`fa:`, `fas `, `mdi-`) and a trailing
+variant such as `-outline` or `-solid` are stripped. `fa:fa-user`, `fas fa-user`, and
+`fa-user-outline` all resolve to the Lucide `user` glyph.
+
+Add or override icons with a dictionary of names to inner SVG markup. The bundled set remains
+the fallback:
+
+```typ
+#let database-icon = "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/><path d=\"M3 5v14a9 3 0 0 0 18 0V5\"/>"
+
+#mermaid(
+  "flowchart LR\n  a@{ icon: \"acme:database\", form: \"square\", label: \"DB\" }",
+  icons: ("acme:database": database-icon),
+)
+```
+
+The dictionary is also accepted as `options: (icons: (...))`; explicit values win over earlier
+ones. Custom markup is inserted by Pele without filtering, so only pass markup you trust.
+Unknown names leave Pele's icon frame empty.
+
+Pele also draws built-in `database`, `server`, `disk`, `internet`, and `cloud` symbols in
+`architecture-beta`, and `file` and `folder` in `treeView-beta`, without any resolver.
 
 ### Raw blocks
 
@@ -257,7 +298,8 @@ SVG renderer is not a browser:
   renderer may not fully support.
 
 Pelermaid renders Mermaid source through a sandboxed QuickJS runtime, not through a browser.
-It does not fetch the source, images, icons, or fonts referenced by a diagram.
+It does not fetch the source, images, icons, or fonts referenced by a diagram. Icons come
+from the bundled Lucide subset or the trusted `icons` dictionary (see [Icons](#icons)).
 
 ## Accessibility
 
@@ -356,12 +398,14 @@ fork) before publishing a real version.
 - `mermaid-result` does not read document context, because it returns data rather than
   content. Pass explicit `font`, `foreground`, and `background` values when using it
   outside a document.
-- Pelermaid does not implement Mermaid.js's directives, external icon packs, or every
-  Mermaid configuration key. Unsupported diagram types raise a Pele error.
+- Pelermaid does not implement Mermaid.js's directives or every Mermaid configuration key,
+  and it does not load external icon packs. Icon names outside the bundled Lucide subset
+  must be supplied through `icons`; otherwise Pele leaves the icon frame empty. Unsupported
+  diagram types raise a Pele error.
 
 ## License
 
-Pelermaid is MIT licensed. `pele.kbc1` bundles Pele (MIT) and a Lucide icon (ISC); the full
-texts are in `LICENSES/`. Because the distributed bytecode contains both, the manifest
-declares `MIT AND ISC`. See [`LICENSE`](LICENSE) and
+Pelermaid is MIT licensed. `pele.kbc1` bundles Pele (MIT) and a subset of Lucide icons
+(ISC); the full texts are in `LICENSES/`. Because the distributed bytecode contains both,
+the manifest declares `MIT AND ISC`. See [`LICENSE`](LICENSE) and
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
