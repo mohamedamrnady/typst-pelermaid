@@ -293,7 +293,7 @@ from the bundled Lucide subset or the trusted `icons` dictionary (see [Icons](#i
 
 - Pelermaid depends on CtxJS. If an offline or Tinymist setup cannot resolve preview
   packages, vendor CtxJS and change the import in `lib.typ`; see
-  [developer.md](https://github.com/mohamedamrnady/typst-pelermaid/blob/main/developer.md).
+  [developer.md](developer.md).
 - `background: none` produces a transparent canvas. Pele paints several decorations with the
   canvas colour, so edge labels, edge casings, arrow markers, pie labels, sequence-number
   halos, and treemap labels fall back to the opaque `label-bg` (the preset background by
@@ -309,7 +309,7 @@ from the bundled Lucide subset or the trusted `icons` dictionary (see [Icons](#i
 
 ## Development
 
-See [developer.md](https://github.com/mohamedamrnady/typst-pelermaid/blob/main/developer.md)
+See [developer.md](developer.md)
 for building, testing, and releasing Pelermaid.
 
 ## License

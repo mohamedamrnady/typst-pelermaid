@@ -23,6 +23,7 @@ files=(
   LICENSE
   THIRD_PARTY_NOTICES.md
   CHANGELOG.md
+  developer.md
   sample.typ
   LICENSES/PELE-MIT.txt
   LICENSES/LUCIDE-ISC.txt
